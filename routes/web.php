@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Quote;
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -12,5 +13,21 @@
 */
 
 $router->get('/', function () use ($router) {
-    return $router->app->version();
+    $count = Quote::query()->get()->count();
+    $day = (int) date('z');
+    $page = $day % $count + 1;
+    $quotes = Quote::query()->get()->forPage($page, 1)->all();
+
+    //dd($quotes);
+    if (empty($quotes)) {
+        throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
+    }
+
+    return view('quote', ['quote' => $quotes[1]]);
 });
+
+$router->get('/{id}', function($id) use ($router) {
+    $quote = Quote::query()->findOrFail($id);
+    return view('quote', ['quote' => $quote]);
+});
+
